@@ -1,11 +1,13 @@
-import { StatusBar } from 'expo-status-bar';
-import { Image ,StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import logo from './assets/logo.png';
-import * as ImagePicker from 'expo-image-picker'
+import { StatusBar } from 'expo-status-bar';
 
 //HTML kullanımı gibi farkı yok etiketler ve style'lar aşşağıdan alınarak yapılır
 export default function App() {
-  
+  let [selectedImage, setSelectedImage] = React.useState(null);
+
   //Galeri erişim izni alma ve galeriden fotoğraf seçme bloğu
   let openImagePickerAsync = async () => {
     let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -16,11 +18,34 @@ export default function App() {
     }
 
     let pickerResult = await ImagePicker.launchImageLibraryAsync();
-    console.log(pickerResult);
+
+    if (pickerResult.cancelled === true) {
+      return;
+    }
+
+    setSelectedImage({ localUri: pickerResult.uri});
+  };
+
+  //Seçilen fotoğraf için açılan yeni page
+  //Görseli tekrardan değiştirmek için aynı butonu burayada koydum
+  if (selectedImage !== null) {
+    return (
+      <View style={styles.container}>
+        <Image
+          source={{ uri: selectedImage.localUri }}
+          style={styles.thumbnail}
+        />
+        
+        <TouchableOpacity
+        onPress={openImagePickerAsync}
+        style={styles.buttonStyle}>
+          <Text style = {styles.buttonText}>Pick a photo</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
-
-
+  //Genel uygulama tasarım bölgesi
   return (
     <View style={styles.container}>
       
@@ -70,5 +95,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#fff',
   },
-
+  thumbnail: {
+    width: 300,
+    height: 300,
+    resizeMode: 'contain',
+  },
 });

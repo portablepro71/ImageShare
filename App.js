@@ -1,8 +1,12 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing'
 import logo from './assets/logo.png';
 import { StatusBar } from 'expo-status-bar';
+import uploadToAnonymousFilesAsync from 'anonymous-files';
+
+
 
 //HTML kullanımı gibi farkı yok etiketler ve style'lar aşşağıdan alınarak yapılır
 export default function App() {
@@ -23,7 +27,23 @@ export default function App() {
       return;
     }
 
+    if (Platform.OS === 'web') {
+        let remoteUri = await uploadToAnonymousFilesAsync(pickerResult.uri);
+        setSelectedImage({ localUri: pickerResult.uri, remoteUri });
+    } else {
+        setSelectedImage({ localUri: pickerResult.uri, remoteUri: null });
+    }
+
     setSelectedImage({ localUri: pickerResult.uri});
+  };
+  
+  let openShareDialogAsync = async () => {
+      if (!(await Sharing.isAvailableAsync())) {
+        alert(`The image is available for sharing at: ${selectedImage.remoteUri}`);
+        return;
+    }
+
+      await Sharing.shareAsync(selectedImage.remoteUri || selectedImage.localUri);
   };
 
   //Seçilen fotoğraf için açılan yeni page
@@ -34,15 +54,13 @@ export default function App() {
         <Image
           source={{ uri: selectedImage.localUri }}
           style={styles.thumbnail}
-        />
-        
-        <TouchableOpacity
-        onPress={openImagePickerAsync}
-        style={styles.buttonStyle}>
-          <Text style = {styles.buttonText}>Pick a photo</Text>
+        />        
+        <TouchableOpacity onPress={openShareDialogAsync} style={styles.buttonStyle}>
+          <Text style = {styles.buttonText}>Share this photo</Text>
         </TouchableOpacity>
       </View>
     );
+
   }
 
   //Genel uygulama tasarım bölgesi
